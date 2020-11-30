@@ -1,6 +1,7 @@
 package actions;
 
 import actor.ActorsAwards;
+import entertainment.Season;
 import fileio.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -22,8 +23,12 @@ public final class Actions {
      * @param arrayResult
      * @throws IOException
      */
-    public void favorite(final List<UserInputData> users, final ActionInputData action,
-                         final Writer fileWriter, final JSONArray arrayResult) throws IOException {
+    public void favorite(final List<UserInputData> users,
+                         final ActionInputData action,
+                         final List<ActionInputData> actions,
+                         final Writer fileWriter,
+                         final JSONArray arrayResult) throws IOException {
+        int viewed = 0;
         for (UserInputData user : users) {
             if (user.getUsername().equals(action.getUsername())) {
                 if (user.getHistory().containsKey(action.getTitle())) {
@@ -39,10 +44,26 @@ public final class Actions {
                         arrayResult.add(result);
                     }
                 } else {
-                    JSONObject result = fileWriter.writeFile(action.getActionId(), "",
-                            "error -> " + action.getTitle()
-                                    + " is not seen");
-                    arrayResult.add(result);
+                    for (int i = 0; i < actions.size() - 1; i++) {
+                        if (actions.get(i).getUsername() != null) {
+                            if (actions.get(i).getUsername().equals(action.getUsername())
+                                    && actions.get(i).getType().equals("view")
+                                    && actions.get(i).getTitle().equals(action.getTitle())) {
+                                viewed++;
+                            }
+                        }
+                    }
+                    if (viewed == 0) {
+                        JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                                "error -> " + action.getTitle()
+                                        + " is not seen");
+                        arrayResult.add(result);
+                    } else {
+                        JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                                "success -> " + action.getTitle()
+                                        + " was added as favourite");
+                        arrayResult.add(result);
+                    }
                 }
             }
         }
@@ -59,24 +80,110 @@ public final class Actions {
      */
     public void rating(final List<UserInputData> users,
                        final ActionInputData action,
+                       final List<ActionInputData> actions,
+                       final List<SerialInputData> serials,
+                       final List<MovieInputData> movies,
                        final Writer fileWriter,
                        final JSONArray arrayResult) throws IOException {
-        for (UserInputData user : users) {
-            if (action.getUsername().equals(user.getUsername())) {
-                if (user.getHistory().containsKey(action.getTitle())) {
-                    double grade = action.getGrade();
-                    JSONObject result = fileWriter.writeFile(action.getActionId(), "",
-                            "success -> " + action.getTitle()
-                                    + " was rated with " + grade + " by " + user.getUsername());
-                    arrayResult.add(result);
-                } else {
-                    JSONObject result = fileWriter.writeFile(action.getActionId(), "",
-                            "error -> " + action.getTitle()
-                                    + " is not seen");
-                    arrayResult.add(result);
+        ArrayList<ActionInputData> actionRating = new ArrayList<>(); // filme
+        ArrayList<ActionInputData> actionRating1 = new ArrayList<>(); // seriale
+        UserInputData findUser = null;
+        for (UserInputData itUser : users) {
+            if (action.getUsername().equals(itUser.getUsername())) {
+                findUser = itUser;
+            }
+        }
+
+        for (int i = 0; i < action.getActionId() - 1; i++) {
+            if (actions.get(i).getType() != null) {
+                if (actions.get(i).getType().equals("rating")) {
+                    for (UserInputData user : users) {
+                        if (actions.get(i).getUsername().equals(user.getUsername())) {
+                            if (user.getHistory().containsKey(actions.get(i).getTitle())) {
+                                if (actions.get(i).getSeasonNumber() != 0) {
+                                    for (SerialInputData serial : serials) {
+                                        if (serial.getTitle().equals(actions.get(i).getTitle())) {
+                                            int contained = 0;
+                                            for (int o = 0; o < actionRating1.size(); o++) {
+                                                if (actionRating1.get(o).getUsername()
+                                                        .equals(actions.get(i).getUsername())
+                                                        && actionRating1.get(o).getTitle()
+                                                        .equals(serial.getTitle())
+                                                        && actionRating1.get(o).getSeasonNumber()
+                                                        == actions.get(i).getSeasonNumber()) {
+                                                    contained++;
+                                                }
+                                            }
+                                            if (contained == 0) {
+                                                actionRating1.add(actions.get(i));
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    for (MovieInputData movie : movies) {
+                                        if (movie.getTitle().equals(actions.get(i).getTitle())) {
+                                            int contained = 0;
+                                            for (int o = 0; o < actionRating.size(); o++) {
+                                                if (actionRating.get(o).getUsername()
+                                                        .equals(actions.get(i).getUsername())
+                                                        && actionRating.get(o).getTitle()
+                                                        .equals(movie.getTitle())) {
+                                                    contained++;
+                                                }
+                                            }
+                                            if (contained == 0) {
+                                                actionRating.add(actions.get(i));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        int contain = 0;
+        for (ActionInputData itAction : actionRating) {
+            if (itAction.getTitle().equals(action.getTitle())) {
+                if (action.getUsername().equals(itAction.getUsername())) {
+                    contain++;
+                }
+            }
+        }
+
+        if (action.getSeasonNumber() != 0) {
+            for (ActionInputData itAction : actionRating1) {
+                if (action.getTitle().equals(itAction.getTitle())) {
+                    if (action.getUsername().equals(itAction.getUsername())) {
+                        if (action.getSeasonNumber() == itAction.getSeasonNumber()) {
+                            contain++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (contain == 0) {
+            if (findUser.getHistory().containsKey(action.getTitle())) {
+                double grade = action.getGrade();
+                JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                        "success -> " + action.getTitle()
+                                + " was rated with " + grade + " by " + findUser.getUsername());
+                arrayResult.add(result);
+            } else {
+                JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                            "error -> " + action.getTitle() + " is not seen");
+                arrayResult.add(result);
+            }
+        } else {
+            JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                    "error -> " + action.getTitle()
+                            + " has been already rated");
+            arrayResult.add(result);
+        }
+
     }
 
     /**
@@ -857,7 +964,9 @@ public final class Actions {
                                                 if (actionRating1.get(o).getUsername()
                                                         .equals(actions.get(i).getUsername())
                                                     && actionRating1.get(o).getTitle()
-                                                        .equals(serial.getTitle())) {
+                                                        .equals(serial.getTitle())
+                                                    && actionRating1.get(o).getSeasonNumber()
+                                                    == actions.get(i).getSeasonNumber()) {
                                                     contained++;
                                                 }
                                             }
@@ -895,10 +1004,11 @@ public final class Actions {
         for (int i = 0; i < actionRating.size(); i++) {
             double k = 1;
             double grade = actionRating.get(i).getGrade();
-            for (int j = i; j < actionRating.size(); j++) {
+            for (int j = i + 1; j < actionRating.size(); j++) {
                 if (actionRating.get(i).getTitle().equals(actionRating.get(j).getTitle())) {
                     grade += actionRating.get(j).getGrade();
                     k++;
+                    actionRating.remove(j);
                 }
             }
             grade = grade / k;
@@ -916,6 +1026,7 @@ public final class Actions {
                             == actionRating1.get(j).getSeasonNumber()) {
                         grade += actionRating1.get(j).getGrade();
                         k++;
+                        actionRating1.remove(j);
                     }
                 }
                 grade = grade / k;
@@ -927,6 +1038,7 @@ public final class Actions {
                 for (int j = i + 1; j < actionRating1.size(); j++) {
                     if (actionRating1.get(i).getTitle().equals(actionRating1.get(j).getTitle())) {
                         grade += grades.get(j);
+                        actionRating1.remove(j);
                     }
                 }
                 int nrSeasons = 0;
@@ -939,8 +1051,6 @@ public final class Actions {
                 ratings.put(actionRating1.get(i).getTitle(), grade);
             }
         }
-
-        System.out.println(ratings.toString());
 
         Map<String, Double> actori = new HashMap<>();
         ArrayList<String> filmography;
@@ -958,8 +1068,6 @@ public final class Actions {
             mark = mark / k;
             actori.put(actor.getName(), mark);
         }
-
-        System.out.println(actori.toString());
 
         Map<String, Double> sorted = new LinkedHashMap<>();
         Map<String, Double> finalSorted = new LinkedHashMap<>();
@@ -991,7 +1099,6 @@ public final class Actions {
                     }).forEachOrdered(x -> finalSorted.put(x.getKey(), x.getValue()));
         }
 
-        System.out.println(sorted.toString());
 
 
         List<String> listActori = new ArrayList<>();
@@ -1000,7 +1107,6 @@ public final class Actions {
                 listActori.add(actor);
             }
         }
-        System.out.println(listActori.toString());
         List<String> res = new ArrayList<>();
 
         if (listActori.size() > action.getNumber()) {
@@ -1020,12 +1126,21 @@ public final class Actions {
         arrayResult.add(result);
     }
 
+    /**
+     * Query movies for criteria Ratings.
+     * @param users
+     * @param actions
+     * @param movies
+     * @param fileWriter
+     * @param arrayResult
+     * @param action
+     * @throws IOException
+     */
     public void moviesQueryRatings(final List<UserInputData> users,
                                    final List<ActionInputData> actions,
                                    final List<MovieInputData> movies,
                                    final Writer fileWriter,
                                    final JSONArray arrayResult,
-                                   final List<SerialInputData> serials,
                                    final ActionInputData action) throws IOException {
         ArrayList<ActionInputData> actionRating = new ArrayList<>();
 
@@ -1064,10 +1179,11 @@ public final class Actions {
         for (int i = 0; i < actionRating.size(); i++) {
             double k = 1;
             double grade = actionRating.get(i).getGrade();
-            for (int j = i; j < actionRating.size(); j++) {
+            for (int j = i + 1; j < actionRating.size(); j++) {
                 if (actionRating.get(i).getTitle().equals(actionRating.get(j).getTitle())) {
                     grade += actionRating.get(j).getGrade();
                     k++;
+                    actionRating.remove(j);
                 }
             }
             grade = grade / k;
@@ -1102,6 +1218,296 @@ public final class Actions {
         arrayResult.add(result);
 
 
+    }
+
+    /**
+     * Query shows for criteria ratings.
+     * @param users
+     * @param actions
+     * @param serials
+     * @param fileWriter
+     * @param arrayResult
+     * @param action
+     * @throws IOException
+     */
+    public void showsQueryRatings(final List<UserInputData> users,
+                                  final List<ActionInputData> actions,
+                                  final List<SerialInputData> serials,
+                                  final Writer fileWriter,
+                                  final JSONArray arrayResult,
+                                  final ActionInputData action) throws IOException {
+
+        ArrayList<ActionInputData> actionRating1 = new ArrayList<>(); // seriale
+
+        for (int i = 0; i < action.getActionId() - 1; i++) {
+            if (actions.get(i).getType() != null) {
+                if (actions.get(i).getType().equals("rating")) {
+                    for (UserInputData user : users) {
+                        if (actions.get(i).getUsername().equals(user.getUsername())) {
+                            if (user.getHistory().containsKey(actions.get(i).getTitle())) {
+                                if (actions.get(i).getSeasonNumber() != 0) {
+                                    for (SerialInputData serial : serials) {
+                                        if (serial.getTitle().equals(actions.get(i).getTitle())) {
+                                            int contained = 0;
+                                            for (int o = 0; o < actionRating1.size(); o++) {
+                                                if (actionRating1.get(o).getUsername()
+                                                        .equals(actions.get(i).getUsername())
+                                                        && actionRating1.get(o).getTitle()
+                                                        .equals(serial.getTitle())
+                                                        && actionRating1.get(o).getSeasonNumber()
+                                                        == actions.get(i).getSeasonNumber()) {
+                                                    contained++;
+                                                }
+                                            }
+                                            if (contained == 0) {
+                                                actionRating1.add(actions.get(i));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        List<List<String>> filters = action.getFilters();
+        Map<String, Double> ratings = new HashMap<>();
+
+        if (actionRating1.size() != 0) {
+            ArrayList<Double> grades = new ArrayList<>();
+            for (int i = 0; i < actionRating1.size(); i++) {
+                double k = 1;
+                double grade = actionRating1.get(i).getGrade();
+                for (int j = i + 1; j < actionRating1.size(); j++) {
+                    if (actionRating1.get(i).getTitle().equals(actionRating1.get(j).getTitle())
+                            && actionRating1.get(i).getSeasonNumber()
+                            == actionRating1.get(j).getSeasonNumber()) {
+                        grade += actionRating1.get(j).getGrade();
+                        k++;
+                        actionRating1.remove(j);
+                    }
+                }
+                grade = grade / k;
+                grades.add(grade);
+            }
+
+            for (int i = 0; i < actionRating1.size(); i++) {
+                double grade = grades.get(i);
+                for (int j = i + 1; j < actionRating1.size(); j++) {
+                    if (actionRating1.get(i).getTitle().equals(actionRating1.get(j).getTitle())) {
+                        grade += grades.get(j);
+                        actionRating1.remove(j);
+                    }
+                }
+                int nrSeasons = 0;
+                for (SerialInputData serial : serials) {
+                    if (serial.getTitle().equals(actionRating1.get(i).getTitle())) {
+                        nrSeasons = serial.getNumberSeason();
+                    }
+                }
+                grade = grade / nrSeasons;
+                ratings.put(actionRating1.get(i).getTitle(), grade);
+            }
+        }
+
+        ArrayList<String> films = new ArrayList<>();
+        for (String film : ratings.keySet()) {
+            for (SerialInputData movie : serials) {
+                if (movie.getTitle().equals(film)) {
+                    if (filters.get(0).get(0) != null
+                            && filters.get(1) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))
+                                && movie.getGenres().contains(filters.get(1).get(0))) {
+                            films.add(film);
+                        }
+                    } else if (filters.get(0).get(0) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))) {
+                            films.add(film);
+                        }
+                    } else if (filters.get(1) != null) {
+                        if (movie.getGenres().contains(filters.get(1).get(0))) {
+                            films.add(film);
+                        }
+                    }
+                }
+            }
+        }
+
+        JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                "Query result: " + films.toString());
+        arrayResult.add(result);
+    }
+
+    public void moviesQueryLongest(final List<MovieInputData> movies,
+                                   final Writer fileWriter,
+                                   final JSONArray arrayResult,
+                                   final ActionInputData action) throws IOException {
+        Map<String, Integer> films = new HashMap<>();
+        for (MovieInputData movie : movies) {
+            films.put(movie.getTitle(), movie.getDuration());
+        }
+
+        Map<String, Integer> sorted = new LinkedHashMap<>();
+        Map<String, Integer> finalSorted = new LinkedHashMap<>();
+        if (action.getSortType().equals("asc")) {
+            films.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+            sorted.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> {
+                        if (e1.getValue().equals(e2.getValue())) {
+                            return e1.getKey().compareTo(e2.getKey());
+                        }
+                        return 0;
+                    }).forEachOrdered(x -> finalSorted.put(x.getKey(), x.getValue()));
+        } else if (action.getSortType().equals("desc")) {
+            films.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+            sorted.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> {
+                        if (e1.getValue().equals(e2.getValue())) {
+                            return e2.getKey().compareTo(e1.getKey());
+                        }
+                        return 0;
+                    }).forEachOrdered(x -> finalSorted.put(x.getKey(), x.getValue()));
+        }
+
+        List<List<String>> filters = action.getFilters();
+        ArrayList<String> filmsList = new ArrayList<>();
+        for (String film : finalSorted.keySet()) {
+            for (MovieInputData movie : movies) {
+                if (movie.getTitle().equals(film)) {
+                    if (filters.get(0).get(0) != null
+                            && filters.get(1) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))
+                                && movie.getGenres().contains(filters.get(1).get(0))) {
+                            filmsList.add(film);
+                        }
+                    } else if (filters.get(0).get(0) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))) {
+                            filmsList.add(film);
+                        }
+                    } else if (filters.get(1) != null) {
+                        if (movie.getGenres().contains(filters.get(1).get(0))) {
+                            filmsList.add(film);
+                        }
+                    }
+                }
+            }
+        }
+
+        List<String> res = new ArrayList<>();
+
+        if (filmsList.size() > action.getNumber()) {
+            for (int i = 0; i < action.getNumber(); i++) {
+                res.add(filmsList.get(i));
+            }
+        } else if (filmsList.size() < action.getNumber()) {
+            for (int i = 0; i < filmsList.size(); i++) {
+                res.add(filmsList.get(i));
+            }
+        } else {
+            res = filmsList;
+        }
+
+        JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                "Query result: " + res.toString());
+        arrayResult.add(result);
+
+    }
+
+    public void serialsQueryLongest(final List<SerialInputData> serials,
+                                    final Writer fileWriter,
+                                    final JSONArray arrayResult,
+                                    final ActionInputData action) throws IOException {
+        Map<String, Integer> films = new HashMap<>();
+        for (SerialInputData serial : serials) {
+            ArrayList<Season> seasons = serial.getSeasons();
+            int durata = 0;
+            for (Season season : seasons) {
+                durata += season.getDuration();
+            }
+            films.put(serial.getTitle(), durata);
+        }
+
+        Map<String, Integer> sorted = new LinkedHashMap<>();
+        Map<String, Integer> finalSorted = new LinkedHashMap<>();
+        if (action.getSortType().equals("asc")) {
+            films.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+            sorted.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> {
+                        if (e1.getValue().equals(e2.getValue())) {
+                            return e1.getKey().compareTo(e2.getKey());
+                        }
+                        return 0;
+                    }).forEachOrdered(x -> finalSorted.put(x.getKey(), x.getValue()));
+        } else if (action.getSortType().equals("desc")) {
+            films.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+            sorted.entrySet()
+                    .stream()
+                    .sorted((e1, e2) -> {
+                        if (e1.getValue().equals(e2.getValue())) {
+                            return e2.getKey().compareTo(e1.getKey());
+                        }
+                        return 0;
+                    }).forEachOrdered(x -> finalSorted.put(x.getKey(), x.getValue()));
+        }
+
+        List<List<String>> filters = action.getFilters();
+        ArrayList<String> filmsList = new ArrayList<>();
+        for (String film : finalSorted.keySet()) {
+            for (SerialInputData movie : serials) {
+                if (movie.getTitle().equals(film)) {
+                    if (filters.get(0).get(0) != null
+                            && filters.get(1) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))
+                                && movie.getGenres().contains(filters.get(1).get(0))) {
+                            filmsList.add(film);
+                        }
+                    } else if (filters.get(0).get(0) != null) {
+                        if (movie.getYear() == Integer.parseInt(filters.get(0).get(0))) {
+                            filmsList.add(film);
+                        }
+                    } else if (filters.get(1) != null) {
+                        if (movie.getGenres().contains(filters.get(1).get(0))) {
+                            filmsList.add(film);
+                        }
+                    }
+                }
+            }
+        }
+
+        List<String> res = new ArrayList<>();
+
+        if (filmsList.size() > action.getNumber()) {
+            for (int i = 0; i < action.getNumber(); i++) {
+                res.add(filmsList.get(i));
+            }
+        } else if (filmsList.size() < action.getNumber()) {
+            for (int i = 0; i < filmsList.size(); i++) {
+                res.add(filmsList.get(i));
+            }
+        } else {
+            res = filmsList;
+        }
+
+        JSONObject result = fileWriter.writeFile(action.getActionId(), "",
+                "Query result: " + res.toString());
+        arrayResult.add(result);
     }
 
     /**
@@ -1142,18 +1548,33 @@ public final class Actions {
                     if (action.getObjectType().equals("movies")
                         && action.getCriteria().equals("ratings")) {
                         moviesQueryRatings(users, actions, movies, fileWriter,
-                                           arrayResult, serials, action);
+                                           arrayResult, action);
+                    }
+                    if (action.getObjectType().equals("shows")
+                            && action.getCriteria().equals("ratings")) {
+                        showsQueryRatings(users, actions, serials, fileWriter,
+                                arrayResult, action);
+                    }
+                    if (action.getObjectType().equals("movies")
+                            && action.getCriteria().equals("longest")) {
+                        moviesQueryLongest(movies, fileWriter, arrayResult,
+                                           action);
+                    }
+                    if (action.getObjectType().equals("shows")
+                            && action.getCriteria().equals("longest")) {
+                        serialsQueryLongest(serials, fileWriter, arrayResult,
+                                action);
                     }
                 }
                 if (action.getActionType().equals("command")) {
                     if (action.getType().equals("favorite")) {
-                        favorite(users, action, fileWriter, arrayResult);
+                        favorite(users, action, actions, fileWriter, arrayResult);
                     }
                     if (action.getType().equals("view")) {
                         view(users, actions, action, fileWriter, arrayResult);
                     }
                     if (action.getType().equals("rating")) {
-                        rating(users, action, fileWriter, arrayResult);
+                        rating(users, action, actions, serials, movies, fileWriter, arrayResult);
                     }
                 }
                 if (action.getActionType().equals("recommendation")) {
