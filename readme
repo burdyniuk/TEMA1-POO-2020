@@ -1,0 +1,64 @@
+Tema 1 POO - 2020
+Burdîniuc Ilie, 321CD
+
+Am creat 2 clase care contin functii ce implementeaza functionalitatile 
+cerute de tema.
+
+Clasa Actions:
+	- functia execute parcurge toate actiunile si in baza tipului alege
+	  ce functie sa execute pentru a face actiunea ceruta
+	- functia favorite adauga un film sau serial in lista de favorite, 
+	  daca acesta deja nu a fost adaugat si doar daca a fost vazut
+	- functia rating ofera un rating filmului sau serialului, la fel
+	  verificand daca actiunea poate fi efectuata de acest utilizator 
+	  catre acest film, daca a fost vazut, sau daca nu a fost deja oferit
+	  acestui film
+	- functia view adauga o vizionare la un film/serial in lista history a
+	  userului
+	- functia standard ofera recomandare standard, primul film/serial 
+	  nevizionat de catre user
+	- functia bestUnseen, face un rating a filmelor si a serialelor si 
+	  ofera cel mai bun film/serial nevizionat de catre user, daca acesta
+	  are subscription premium
+	- functia favoriteRating, face un raintg in baza adaugarilor la favorite 
+	  a filemlor si serialelor, le sorteaza si scrie primul video 
+	  nevizualizat de user, daca acesta are subscription premium
+	- functia searchRecommendation, face rating a filmelor din genul specificat
+	  in action, le sorteaza si scrie primul video nevizualizat, daca 
+	  userul are subscription premium
+	- functia popularRecommendation, face un rating pentru video in baza 
+	  numarului de vizualizari, le sorteaza si scrie primul video 
+	  nevizualizat, daca userul are subscription premium
+	- functia usersQuery, face un rating a user-elor in baza numarului de
+	  rating-uri oferite, le sorteaza si intaorce numarul de useri specificati
+	  in action, sau daca e mai putin, intorc cat am gasit
+	- functia actorQuery pentru criteriul awards selecteaza actorii care au 
+	  primit premiile specificate in action si le sorteaza, apoi scrie 
+	  un numar specificat de actori; pentru criteriul filter_description,
+	  selecteaza actorii in descrierea carora se intalnesc cuvintele 
+	  specificate in action, le sorteaza dupa numarul de aparitii si 
+	  le scrie
+	- functia actorQueryRatings, creaza rating de filme/seriale, apoi
+	  face face rating de actori cu media filmului, sorteaza si scrie 
+	  numarul de actori specificat in action
+	- functia moviesQuery_ratings, creaza ratings pentru filme,
+	  le selecteaza in baza filtrelor si scrie aceasta lista
+	- functia showsQueryRatings, creaza rating pentru seriale, 
+	  le selecteaza in baza filtrelor si scrie un numar specificat de seriale
+	- functia moviesQueryRatings, creaza ratings pentru filme in
+	  baza duratei acestora, le sorteaza si scrie numarul specificat de filme
+	- functia serialsQueryLongest, creaza ratings pentru seriale in
+	  baza duratei acestora, le sorteaza si scrie numarul specificat de seriale
+	- functia moviesQueryMostViewed, creaza ratings in baza numarului de 
+	  vizualizari filmului, sorteaza si intoarce numarul specificat de filme
+	- functia showsQueryMostViewed, creaza rating de seriale in baza numarului 
+	  de vizualizari, le sorteaza si intoarce numarul specificat de seriale
+	- functia moviesQueryFavorite, creaza rating de filme in baza adaugarilor
+	  in favorite, le sorteaza si intoarce numarul specificat de filme
+	- functia serialsQueryFavorite, creaza rating de seriale in baza adaugarilor
+	  in favorite, le sorteaza si intoarce numarul specificat de seriale
+
+Clasa Sort:
+	- contine functiile de sortere folosite in Actions, acestea sorteaza map
+	  in functie de tipul sortarii specificat in action si dupa cheie si/sau
+	  nume 

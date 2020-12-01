@@ -1,10 +1,8 @@
 Starting audit...
+[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Sort.java:7:17: Using the '.*' form of import should be avoided - java.util.*. [AvoidStarImport]
 [ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:5:14: Using the '.*' form of import should be avoided - fileio.*. [AvoidStarImport]
 [ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:10:17: Using the '.*' form of import should be avoided - java.util.*. [AvoidStarImport]
-[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:853:26: '3' is a magic number. [MagicNumber]
-[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:942:5: Method length is 179 lines (max allowed is 150). [MethodLength]
-[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:1343:5: Missing a Javadoc comment. [MissingJavadocMethod]
-[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:1426:5: Missing a Javadoc comment. [MissingJavadocMethod]
+[ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/actions/Actions.java:811:26: '3' is a magic number. [MagicNumber]
 [ERROR] /Users/burdyniuk/Code/java-oop/Tema-POO-2020/./src/main/Main.java:7:14: Using the '.*' form of import should be avoided - fileio.*. [AvoidStarImport]
 Audit done.
-Checkstyle ends with 7 errors.
+Checkstyle ends with 5 errors.
